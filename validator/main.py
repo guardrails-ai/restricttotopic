@@ -441,16 +441,22 @@ class RestrictToTopic(Validator):
         headers = {
             "Content-Type": "application/json",
         }
-        # We need a better way to do this.
+        # TODO: We need a better way to do this.
         # See: https://www.notion.so/guardrailsai/Model-Authentication-6614cbc0ff7e4ef2bba0652699ff74cf
         auth_header = os.environ.get("CLASSIFIER_API_AUTH")
         if auth_header:
             headers["Authorization"] = auth_header
+        # TODO: We can move inference calls to the validator base class.
+        # Inference post processing should still be done here.
         results = requests.post(
             url=self._classifier_api_endpoint,
             headers=headers,
             data=json.dumps(data),
         )
+        # TODO: We should not need custom parsing. Fix this on the inferless end.
+        # Custom parsing because the result is a byte array that was casted to a string.
+        # It should instead be returned as a string array so it can be loaded as python
+        # objects directly.
         results = results.json()
         results = results["outputs"][0]["data"][0]
         results = results.replace(" b", " ")
