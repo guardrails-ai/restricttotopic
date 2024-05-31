@@ -438,8 +438,12 @@ class RestrictToTopic(Validator):
         }
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer ***REMOVED***",
         }
+        # We need a better way to do this.
+        # See: https://www.notion.so/guardrailsai/Model-Authentication-6614cbc0ff7e4ef2bba0652699ff74cf
+        auth_header = os.environ.get("CLASSIFIER_API_AUTH")
+        if auth_header:
+            headers["Authorization"] = auth_header
         results = requests.post(
             url=self._classifier_api_endpoint,
             headers=headers,
