@@ -414,6 +414,8 @@ class RestrictToTopic(Validator):
 
         if self._is_sentence(self.accumulation):
             result = self.validate(self.accumulation)
+            if hasattr(result, "validated_chunk"):
+                result.validated_chunk = self.accumulation
             self.accumulation = ""
             return result
 
