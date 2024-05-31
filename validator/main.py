@@ -138,6 +138,7 @@ class RestrictToTopic(Validator):
         else:
             self._classifier = self._inference_endpoint
 
+
         self._json_schema, self._tools = self._create_json_schema(
             self._valid_topics, self._invalid_topics
         )
@@ -186,6 +187,7 @@ class RestrictToTopic(Validator):
         for topic in set(valid_topics + invalid_topics):
             json_schema.append({"topic": topic})
         return json_schema, tools
+
 
     def get_topics_ensemble(self, text: str, candidate_topics: List[str]) -> list[str]:
         """Finds the topics in the input text based on if it is determined by the zero
