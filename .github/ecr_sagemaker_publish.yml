@@ -1,0 +1,62 @@
+name: Sagemaker ECR Publish (RC)
+
+on:
+  push:
+    branches:
+      - main
+      - feat/sagemaker-serve
+
+jobs:
+  publish_image:
+    name: Publish Sagemaker Image (Release Candidate)
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }} 
+      WORKING_DIR: "./"
+    steps: 
+    
+      - name: Check out head
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: linux/amd64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          platforms: linux/amd64
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build & Push ECR Image
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ${{ env.WORKING_DIR }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: ${{ env.AWS_ECR_REPOSITORY }}:restrict2topic-rc
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service --cluster ${{ env.AWS_ECS_CLUSTER_NAME }} --service ${{ env.AWS_ECS_SERVICE_NAME }} --desired-count ${{ env.AWS_ECS_DESIRED_TASK_COUNT }} --force-new-deployment
+        env:
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
