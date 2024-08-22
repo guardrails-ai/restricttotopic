@@ -37,7 +37,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - run: |
+      - name: Set ECR Tag
+        id: set-ecr-tag
+        run: |
           if [ ${{ env.AWS_ECR_RELEASE_CANDIDATE }} == 'true' ]; then
             echo "This is a release candidate."
             echo "Setting tag to -rc"
@@ -80,4 +82,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: 064852979926.dkr.ecr.us-east-1.amazonaws.com/gr-sagemaker-validator-images-prod:${{ env.ECR_TAG }}
+          tags: 064852979926.dkr.ecr.us-east-1.amazonaws.com/gr-sagemaker-validator-images-prod:${{ steps.set-ecr-tag.outputs.ECR_TAG }}
