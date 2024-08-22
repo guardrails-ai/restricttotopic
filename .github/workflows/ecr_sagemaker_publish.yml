@@ -48,19 +48,13 @@ jobs:
         with:
           mask-password: 'true'
 
-      # - name: Build & Push ECR Image
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     builder: ${{ steps.buildx.outputs.name }}
-      #     context: ${{ env.WORKING_DIR }}
-      #     platforms: linux/amd64
-      #     cache-from: type=gha
-      #     cache-to: type=gha,mode=max
-      #     push: true
-      #     tags: ${{ env.AWS_ECR_REPOSITORY }}:restrict2topic-rc
-
-      # - name: Deploy to ECS
-      #   run: |
-      #     aws ecs update-service --cluster ${{ env.AWS_ECS_CLUSTER_NAME }} --service ${{ env.AWS_ECS_SERVICE_NAME }} --desired-count ${{ env.AWS_ECS_DESIRED_TASK_COUNT }} --force-new-deployment
-      #   env:
-      #     AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+      - name: Build & Push ECR Image
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ${{ env.WORKING_DIR }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: 064852979926.dkr.ecr.us-east-1.amazonaws.com/gr-sagemaker-validator-images-prod:restrict2topic-rc
