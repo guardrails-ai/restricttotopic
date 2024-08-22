@@ -28,7 +28,7 @@ jobs:
       AWS_REGION: us-east-1
       AWS_CI_ROLE__PROD: ${{ secrets.AWS_CI_ROLE__PROD }}
       WORKING_DIR: "./"
-      IS_RC: ${{ github.event.inputs.is_release_candidate }}
+      IS_RC: ${{ github.event.inputs.is_release_candidate || 'true' }}
     steps: 
     
       - name: Check out head
@@ -36,8 +36,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Echo is RC
-        run: echo "Is Release Candidate: ${{ env.IS_RC }}"
+      - run: echo "Is Release Candidate: ${{ env.IS_RC }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
