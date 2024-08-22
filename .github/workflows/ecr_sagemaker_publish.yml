@@ -36,7 +36,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - run: echo "Is Release Candidate: ${{ env.IS_RC }}"
+      - run: echo "Is Release Candidate: $IS_RC"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
