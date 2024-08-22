@@ -6,15 +6,18 @@ on:
       - main
       - feat/sagemaker-serve
 
+# Needed for OIDC / assume role
+permissions:
+  id-token: write  
+  contents: read    
+
 jobs:
   publish_image:
     name: Publish Sagemaker Image (Release Candidate)
     runs-on: ubuntu-latest
     env:
       AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }} 
+      AWS_CI_ROLE__PROD: ${{ secrets.AWS_CI_ROLE__PROD }}
       WORKING_DIR: "./"
     steps: 
     
@@ -37,26 +40,25 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          role-to-assume: ${{ env.AWS_CI_ROLE__PROD}}
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build & Push ECR Image
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: ${{ env.WORKING_DIR }}
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: true
-          tags: ${{ env.AWS_ECR_REPOSITORY }}:restrict2topic-rc
+      # - name: Build & Push ECR Image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     builder: ${{ steps.buildx.outputs.name }}
+      #     context: ${{ env.WORKING_DIR }}
+      #     platforms: linux/amd64
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
+      #     push: true
+      #     tags: ${{ env.AWS_ECR_REPOSITORY }}:restrict2topic-rc
 
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service --cluster ${{ env.AWS_ECS_CLUSTER_NAME }} --service ${{ env.AWS_ECS_SERVICE_NAME }} --desired-count ${{ env.AWS_ECS_DESIRED_TASK_COUNT }} --force-new-deployment
-        env:
-          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+      # - name: Deploy to ECS
+      #   run: |
+      #     aws ecs update-service --cluster ${{ env.AWS_ECS_CLUSTER_NAME }} --service ${{ env.AWS_ECS_SERVICE_NAME }} --desired-count ${{ env.AWS_ECS_DESIRED_TASK_COUNT }} --force-new-deployment
+      #   env:
+      #     AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
