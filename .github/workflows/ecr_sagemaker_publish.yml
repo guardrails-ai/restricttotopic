@@ -25,10 +25,11 @@ jobs:
     name: Publish Sagemaker Image (Release Candidate)
     runs-on: ubuntu-latest
     env:
+      VALIDATOR_TAG_NAME: restrict2topic
       AWS_REGION: us-east-1
-      AWS_CI_ROLE__PROD: ${{ secrets.AWS_CI_ROLE__PROD }}
       WORKING_DIR: "./"
-      IS_RC: ${{ github.event.inputs.is_release_candidate || 'true' }}
+      AWS_CI_ROLE__PROD: ${{ secrets.AWS_CI_ROLE__PROD }}
+      AWS_ECR_RELEASE_CANDIDATE: ${{ inputs.is_release_candidate || 'true' }}
     steps: 
     
       - name: Check out head
@@ -36,7 +37,17 @@ jobs:
         with:
           persist-credentials: false
 
-      - run: echo "Is Release Candidate:$IS_RC"
+      - run: |
+          if [ ${{ env.AWS_ECR_RELEASE_CANDIDATE }} == 'true' ]; then
+            echo "This is a release candidate."
+            echo "Setting tag to -rc"
+            ECR_TAG=$VALIDATOR_TAG_NAME-rc
+          else
+            echo "This is a production image."
+            ECR_TAG=$VALIDATOR_TAG_NAME
+          fi
+          echo "Setting ECR tag to $ECR_TAG"
+          echo "ECR_TAG=$ECR_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
@@ -69,4 +80,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: 064852979926.dkr.ecr.us-east-1.amazonaws.com/gr-sagemaker-validator-images-prod:restrict2topic-rc
+          tags: 064852979926.dkr.ecr.us-east-1.amazonaws.com/gr-sagemaker-validator-images-prod:${{ env.ECR_TAG }}
