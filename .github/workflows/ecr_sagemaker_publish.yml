@@ -1,10 +1,19 @@
 name: Sagemaker ECR Publish (RC)
 
+# on manual trigger, with inputs: is_release_candidate
 on:
   push:
     branches:
       - main
       - feat/sagemaker-serve
+  workflow_dispatch:
+    inputs:
+      is_release_candidate:
+        description: 'Is this a release candidate?'
+        required: true
+        default: 'true'
+
+  
 
 # Needed for OIDC / assume role
 permissions:
@@ -19,12 +28,16 @@ jobs:
       AWS_REGION: us-east-1
       AWS_CI_ROLE__PROD: ${{ secrets.AWS_CI_ROLE__PROD }}
       WORKING_DIR: "./"
+      IS_RC: ${{ github.event.inputs.is_release_candidate }}
     steps: 
     
       - name: Check out head
         uses: actions/checkout@v3
         with:
           persist-credentials: false
+
+      - name: Echo is RC
+        run: echo "Is Release Candidate: ${{ env.IS_RC }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
