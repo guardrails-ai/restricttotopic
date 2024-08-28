@@ -1,9 +1,9 @@
 import os
-
+import pytest
 from dotenv import load_dotenv
 from guardrails import Guard
 from pydantic import BaseModel, Field
-from validator import RestrictToTopic
+from validator.main import RestrictToTopic
 
 load_dotenv()
 
@@ -29,15 +29,10 @@ TEST_OUTPUT = """
 }
 """
 
-
-guard = Guard.from_pydantic(output_class=ValidatorTestObject)
-
-try:
-    guard.parse(TEST_OUTPUT)
-    print("Successfully passed validation when it was supposed to.")
-except Exception:
-    print("Failed to pass validation when it was supposed to.")
-
+def test_validator_pass():
+    guard = Guard.from_pydantic(output_class=ValidatorTestObject)
+    resp = guard.parse(TEST_OUTPUT)
+    assert resp.validation_passed is True
 
 TEST_FAIL_OUTPUT = """
 {
@@ -45,8 +40,8 @@ TEST_FAIL_OUTPUT = """
 }
 """
 
-try:
-    guard.parse(TEST_FAIL_OUTPUT)
-    print("Failed to fail validation when it was supposed to")
-except Exception:
-    print("Successfully failed validation when it was supposed to.")
+def test_validator_fail():
+    guard = Guard.from_pydantic(output_class=ValidatorTestObject)
+    with pytest.raises(Exception) as e:
+        guard.parse(TEST_FAIL_OUTPUT)
+    assert str(e.value) == "Validation failed for field with errors: Invalid topics found: ['music']"
