@@ -20,7 +20,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pyright",
-    "ruff"
+    "ruff",
+    "pytest"
 ]
 
 [tool.pyright]
