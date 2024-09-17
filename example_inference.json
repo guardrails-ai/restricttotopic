@@ -1,0 +1,22 @@
+{
+    "inputs": [
+        {
+            "name": "text",
+            "shape": [1],
+            "data": ["I don't like Apple"],
+            "datatype": "BYTES"
+        },
+        {
+            "name": "candidate_topics",
+            "shape": [1],
+            "data": ["Apple"],
+            "datatype": "BYTES"
+        },
+        {
+            "name": "zero_shot_threshold",
+            "shape": [1],
+            "data": [0.5],
+            "datatype": "FP32"
+        }
+    ]
+}
