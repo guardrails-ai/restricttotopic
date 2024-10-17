@@ -1,7 +1,7 @@
 import contextvars
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from dotenv import load_dotenv
 from guardrails.validator_base import (
@@ -114,7 +114,7 @@ class RestrictToTopic(Validator):
         self._device = (
             str(device).lower()
             if str(device).lower() in ["cpu", "mps"]
-            else int(device)
+            else int(device) # type: ignore
         )
         self._model = model
         self._disable_classifier = disable_classifier
@@ -122,11 +122,11 @@ class RestrictToTopic(Validator):
         self._classifier_api_endpoint = classifier_api_endpoint
 
         self._zero_shot_threshold = zero_shot_threshold
-        if self._zero_shot_threshold < 0 or self._zero_shot_threshold > 1:
+        if self._zero_shot_threshold < 0 or self._zero_shot_threshold > 1: # type: ignore
             raise ValueError("zero_shot_threshold must be a number between 0 and 1")
 
         self._llm_threshold = llm_threshold
-        if self._llm_threshold < 0 or self._llm_threshold > 5:
+        if self._llm_threshold < 0 or self._llm_threshold > 5: # type: ignore
             raise ValueError("llm_threshold must be a number between 0 and 5")
         self.set_callable(llm_callable)
 
@@ -198,7 +198,7 @@ class RestrictToTopic(Validator):
 
             api_key = kwargs.get("api_key")
 
-        return api_key
+        return api_key # type: ignore
 
     @retry(
         wait=wait_random_exponential(min=1, max=60),
@@ -265,7 +265,10 @@ class RestrictToTopic(Validator):
                         },
                     ],
                 )
-                return json.loads(response.choices[0].message.content)["topics_present"]
+                content = response.choices[0].message.content
+                if content is None:
+                    raise ValueError("Response content is None")
+                return json.loads(content)["topics_present"]
 
             self._llm_callable = openai_callable
         elif isinstance(llm_callable, Callable):
@@ -367,6 +370,8 @@ class RestrictToTopic(Validator):
         candidate_topics = model_input["valid_topics"] + model_input["invalid_topics"]
 
         result = self._classifier(text, candidate_topics)
+        if not isinstance(result, dict) or not all(isinstance(result[key], list) for key in ["labels", "scores"]):
+            raise ValueError("Classifier output is not in the expected format")
         topics = result["labels"]
         scores = result["scores"]
         found_topics = []
